@@ -4,17 +4,25 @@ import cv2
 import numpy as np
 from mode_method.mode_0 import *
 from mode_method.mode_1 import *
+from mode_method.mode_2 import *
+
 # 软件工作模式
 """
 mode 0：给照片涂抹马赛克，加号增大马赛克范围，减号缩小
 """
-mode = 1
+mode = 0
 current_img = None
+# 仿射变换需要的变量
+point1 = [0, 0]
+point2 = [0, 0]
+point3 = [0, 0]
+point4 = [0, 0]
+numberOfPoint = 0
 
 
 # 鼠标回调函数
 def detect_mode(event, x, y, flags, param):
-    global current_img
+    global current_img, numberOfPoint, point1, point2, point3, point4
     if mode == 0:
         if event == cv2.EVENT_LBUTTONDOWN:
             spot = (x, y)
@@ -29,6 +37,26 @@ def detect_mode(event, x, y, flags, param):
         elif event == cv2.EVENT_LBUTTONDOWN:
             current_img = sharpen(current_img)
             cv2.imshow("main", current_img)
+    elif mode == 2:
+        if event == cv2.EVENT_LBUTTONDOWN:
+            numberOfPoint = numberOfPoint + 1
+            if numberOfPoint == 1:
+                point1 = (x, y)
+            elif numberOfPoint == 2:
+                point2 = (x, y)
+            elif numberOfPoint == 3:
+                point3 = (x, y)
+            elif numberOfPoint == 4:
+                point4 = (x, y)
+                point1, point2, point3, point4 = reRange(point1, point2, point3, point4)
+                src_point = np.float32([point1, point2, point3, point4])
+                dst_point = np.float32([[0, 0], [0, 300], [300, 300], [300, 0]])
+                h = cv2.getPerspectiveTransform(src_point, dst_point)
+                res = cv2.warpPerspective(img, h, (300, 300))
+                cv2.imshow('affineTransform', res)
+
+                point1 = point3 = point2 = point4 = (0, 0)
+                numberOfPoint = 0
         pass
 
 
@@ -85,6 +113,7 @@ def adapt_meadian_filter(img, minsize, maxsize):
     dst = src[borderSize:borderSize + img.shape[0], borderSize:borderSize + img.shape[1]]
     return dst
 
+
 # 预处理
 def preprocess(original_img):
     # 中值滤波去噪声
@@ -105,7 +134,7 @@ if filename != '':
     original_img = img
     # do_mosaic(current_img, 377, 155, 80, 80)
     cv2.imshow("main", current_img)
-    while 1 :
+    while 1:
         k = cv2.waitKey(1) & 0xFF
         if k == ord('r'):
             cv2.imshow("main", original_img)
@@ -114,6 +143,9 @@ if filename != '':
             mode = 0
         elif k == ord('1'):
             mode = 1
+        elif k == ord('2'):
+            mode = 2
+
 
 else:
     print("nothing")
