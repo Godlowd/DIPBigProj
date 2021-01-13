@@ -6,6 +6,9 @@ from mode_method.mode_0 import *
 from mode_method.mode_1 import *
 from mode_method.mode_2 import *
 from mode_method.mode_3 import equalizeHist
+from mode_method.mode_4 import flood_fill, bag
+from mode_method.mode_5 import eraser
+
 # 软件工作模式
 """
 mode 0：给照片涂抹马赛克，加号增大马赛克范围，减号缩小
@@ -18,25 +21,27 @@ point2 = [0, 0]
 point3 = [0, 0]
 point4 = [0, 0]
 numberOfPoint = 0
+# 泛洪运算大小
+flood_fill_scale = 1
+# 橡皮擦大小
+eraser_scale = 3
 
 
 # 鼠标回调函数
 def detect_mode(event, x, y, flags, param):
     global current_img, numberOfPoint, point1, point2, point3, point4
+    print(event)
     if mode == 0:
         if event == cv2.EVENT_LBUTTONDOWN:
             spot = (x, y)
             print(spot)
             do_mosaic(current_img, x, y, 80, 80)
-            cv2.imshow("main", current_img)
         pass
     elif mode == 1:
         if event == cv2.EVENT_RBUTTONDOWN:
             current_img = blur(current_img)
-            cv2.imshow("main", current_img)
         elif event == cv2.EVENT_LBUTTONDOWN:
             current_img = sharpen(current_img)
-            cv2.imshow("main", current_img)
     elif mode == 2:
         if event == cv2.EVENT_LBUTTONDOWN:
             numberOfPoint = numberOfPoint + 1
@@ -60,7 +65,12 @@ def detect_mode(event, x, y, flags, param):
     elif mode == 3:
         if event == cv2.EVENT_LBUTTONDOWN:
             current_img = equalizeHist(current_img)
-            cv2.imshow('main', current_img)
+    elif mode == 4:
+        if event == cv2.EVENT_LBUTTONDOWN:
+            current_img = flood_fill(current_img, x, y, flood_fill_scale)
+    elif mode == 5:
+        if event == cv2.EVENT_MOUSEMOVE and flags == cv2.EVENT_FLAG_LBUTTON:
+            eraser(current_img, original_img, x, y, eraser_scale)
         pass
 
 
@@ -135,14 +145,15 @@ if filename != '':
     img = cv2.imread(filename)
     current_img = img
     # 用来恢复原图像
-    original_img = img
+    original_img = img.copy()
     # do_mosaic(current_img, 377, 155, 80, 80)
-    cv2.imshow("main", current_img)
+
     while 1:
+        cv2.imshow("main", current_img)
         k = cv2.waitKey(1) & 0xFF
+        # 恢复图像到原来的样子
         if k == ord('r'):
-            cv2.imshow("main", original_img)
-            current_img = original_img
+            current_img = original_img.copy()
         elif k == ord('0'):
             mode = 0
         elif k == ord('1'):
@@ -151,6 +162,28 @@ if filename != '':
             mode = 2
         elif k == ord('3'):
             mode = 3
+        elif k == ord('4'):
+            mode = 4
+        elif k == ord('e'):
+            mode = 5
+        # 生成凸包
+        elif k == ord('g'):
+            if mode == 4:
+                bag(current_img)
+        # 根据模式不同调整大小
+        elif k == ord('+'):
+            if mode == 4:
+                flood_fill_scale = flood_fill_scale + 1
+            elif mode == 5:
+                eraser_scale = eraser_scale + 2
+        elif k == ord('-'):
+            if mode == 4:
+                flood_fill_scale = 0 if flood_fill_scale == 0 else flood_fill_scale - 1
+            elif mode == 5:
+                eraser_scale = 1 if eraser_scale < 1 else eraser_scale - 1
+        # 退出
+        elif k == 27:
+            break
 
 
 else:
