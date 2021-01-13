@@ -5,7 +5,7 @@ import numpy as np
 from mode_method.mode_0 import *
 from mode_method.mode_1 import *
 from mode_method.mode_2 import *
-
+from mode_method.mode_3 import equalizeHist
 # 软件工作模式
 """
 mode 0：给照片涂抹马赛克，加号增大马赛克范围，减号缩小
@@ -57,6 +57,10 @@ def detect_mode(event, x, y, flags, param):
 
                 point1 = point3 = point2 = point4 = (0, 0)
                 numberOfPoint = 0
+    elif mode == 3:
+        if event == cv2.EVENT_LBUTTONDOWN:
+            current_img = equalizeHist(current_img)
+            cv2.imshow('main', current_img)
         pass
 
 
@@ -145,6 +149,8 @@ if filename != '':
             mode = 1
         elif k == ord('2'):
             mode = 2
+        elif k == ord('3'):
+            mode = 3
 
 
 else:
