@@ -15,6 +15,7 @@ mode 0：给照片涂抹马赛克，加号增大马赛克范围，减号缩小
 """
 mode = 0
 current_img = None
+previous_img_list = []
 previous_img = None
 # 仿射变换需要的变量
 point1 = [0, 0]
@@ -35,14 +36,17 @@ def detect_mode(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             spot = (x, y)
             previous_img = current_img.copy()
+            previous_img_list.append(previous_img)
             do_mosaic(current_img, x, y, 80, 80)
         pass
     elif mode == 1:
         if event == cv2.EVENT_RBUTTONDOWN:
             previous_img = current_img.copy()
+            previous_img_list.append(previous_img)
             current_img = blur(current_img)
         elif event == cv2.EVENT_LBUTTONDOWN:
             previous_img = current_img.copy()
+            previous_img_list.append(previous_img)
             current_img = sharpen(current_img)
     elif mode == 2:
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -67,15 +71,20 @@ def detect_mode(event, x, y, flags, param):
     elif mode == 3:
         if event == cv2.EVENT_LBUTTONDOWN:
             previous_img = current_img.copy()
+            previous_img_list.append(previous_img)
             current_img = equalizeHist(current_img)
     elif mode == 4:
         if event == cv2.EVENT_LBUTTONDOWN:
             previous_img = current_img.copy()
+            previous_img_list.append(previous_img)
             current_img = flood_fill(current_img, x, y, flood_fill_scale)
     elif mode == 5:
         if event == cv2.EVENT_MOUSEMOVE and flags == cv2.EVENT_FLAG_LBUTTON:
             previous_img = current_img.copy()
+            previous_img_list.append(previous_img)
             eraser(current_img, original_img, x, y, eraser_scale)
+    if event == cv2.EVENT_LBUTTONDOWN or event == cv2.EVENT_LBUTTONUP:
+        print(len(previous_img_list))
 
 
 def AdaptProcess(src, i, j, minSize, maxSize):
@@ -133,11 +142,7 @@ if filename != '':
     # 用来恢复原图像
     original_img = img.copy()
     while 1:
-
         k = cv2.waitKey(1) & 0xFF
-        # if k != 255:
-        #     print(k)
-        # 恢复图像到原来的样子
         if k == ord('r'):
             current_img = original_img.copy()
         elif k == ord('0'):
@@ -172,11 +177,11 @@ if filename != '':
             break
         # backspace
         elif k == 8:
-            print(previous_img)
-            print('-------------------')
-            print(current_img)
-            print(previous_img == current_img)
-            current_img = previous_img.copy()
+            if len(previous_img_list) != 0:
+                current_img = previous_img_list.pop().copy()
+                print(len(previous_img_list))
+            else:
+                current_img = original_img.copy()
         cv2.imshow("main", current_img)
 
 else:
