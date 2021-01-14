@@ -125,10 +125,12 @@ def adapt_meadian_filter(img, minsize, maxsize):
 
 # 预处理
 def preprocess(original_img):
-    # 中值滤波去噪声
-    temp_img = adapt_meadian_filter(original_img, 1, 10)
-    # 锐化提升品质
-    temp_img = sharpen(temp_img)
+    # # 中值滤波去噪声
+    # temp_img = adapt_meadian_filter(original_img, 1, 10)
+    # # 锐化提升品质
+    # temp_img = sharpen(temp_img)
+    kernel = np.ones((5, 5), np.uint8)
+    temp_img = cv2.dilate(original_img, kernel, iterations=1)
     return temp_img
 
 
@@ -141,6 +143,11 @@ if filename != '':
     current_img = img
     # 用来恢复原图像
     original_img = img.copy()
+    # 灰度图像，用于膨胀处理
+    # gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray_img = preprocess(original_img)
+    # new_img = cv2.cvtColor(gray_img, original_img, cv2.COLOR_GRAY2BGR)
+    current_img = gray_img.copy()
     while 1:
         k = cv2.waitKey(1) & 0xFF
         if k == ord('r'):
