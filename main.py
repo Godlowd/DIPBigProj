@@ -15,6 +15,7 @@ mode 0：给照片涂抹马赛克，加号增大马赛克范围，减号缩小
 """
 mode = 0
 current_img = None
+previous_img = None
 # 仿射变换需要的变量
 point1 = [0, 0]
 point2 = [0, 0]
@@ -29,18 +30,19 @@ eraser_scale = 3
 
 # 鼠标回调函数
 def detect_mode(event, x, y, flags, param):
-    global current_img, numberOfPoint, point1, point2, point3, point4
-    print(event)
+    global current_img, numberOfPoint, point1, point2, point3, point4, previous_img
     if mode == 0:
         if event == cv2.EVENT_LBUTTONDOWN:
             spot = (x, y)
-            print(spot)
+            previous_img = current_img.copy()
             do_mosaic(current_img, x, y, 80, 80)
         pass
     elif mode == 1:
         if event == cv2.EVENT_RBUTTONDOWN:
+            previous_img = current_img.copy()
             current_img = blur(current_img)
         elif event == cv2.EVENT_LBUTTONDOWN:
+            previous_img = current_img.copy()
             current_img = sharpen(current_img)
     elif mode == 2:
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -64,32 +66,16 @@ def detect_mode(event, x, y, flags, param):
                 numberOfPoint = 0
     elif mode == 3:
         if event == cv2.EVENT_LBUTTONDOWN:
+            previous_img = current_img.copy()
             current_img = equalizeHist(current_img)
     elif mode == 4:
         if event == cv2.EVENT_LBUTTONDOWN:
+            previous_img = current_img.copy()
             current_img = flood_fill(current_img, x, y, flood_fill_scale)
     elif mode == 5:
         if event == cv2.EVENT_MOUSEMOVE and flags == cv2.EVENT_FLAG_LBUTTON:
+            previous_img = current_img.copy()
             eraser(current_img, original_img, x, y, eraser_scale)
-        pass
-
-
-def onMouseEvent(event):
-    # 监听鼠标事件
-    print("MessageName:", event.MessageName)
-    print("Message:", event.Message)
-    print("Time:", event.Time)
-    print("Window:", event.Window)
-    print("WindowName:", event.WindowName)
-    print("Position:", event.Position)
-    print("Wheel:", event.Wheel)
-    print("Injected:", event.Injected)
-    print("---")
-
-    # 返回 True 以便将事件传给其它处理程序
-    # 注意，这儿如果返回 False ，则鼠标事件将被全部拦截
-    # 也就是说你的鼠标看起来会僵在那儿，似乎失去响应了
-    return True
 
 
 def AdaptProcess(src, i, j, minSize, maxSize):
@@ -146,11 +132,11 @@ if filename != '':
     current_img = img
     # 用来恢复原图像
     original_img = img.copy()
-    # do_mosaic(current_img, 377, 155, 80, 80)
-
     while 1:
-        cv2.imshow("main", current_img)
+
         k = cv2.waitKey(1) & 0xFF
+        # if k != 255:
+        #     print(k)
         # 恢复图像到原来的样子
         if k == ord('r'):
             current_img = original_img.copy()
@@ -184,7 +170,14 @@ if filename != '':
         # 退出
         elif k == 27:
             break
-
+        # backspace
+        elif k == 8:
+            print(previous_img)
+            print('-------------------')
+            print(current_img)
+            print(previous_img == current_img)
+            current_img = previous_img.copy()
+        cv2.imshow("main", current_img)
 
 else:
     print("nothing")

@@ -5,7 +5,6 @@ def reRange(point1, point2, point3, point4):
     leftTopPoint = [0, 0]
     rightTopPoint = [0, 0]
     for point in pointList:
-        print(point[0], leftBottomPoint[0])
         # find the leftest point in the imageView
         if point[0] < leftBottomPoint[0]:
             leftBottomPoint = point
